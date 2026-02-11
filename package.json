@@ -1,5 +1,5 @@
 {
-  "name": "invoice-vue",
+  "name": "saas-invoice-generator",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -11,10 +11,14 @@
   "dependencies": {
     "vue": "^3.4.0",
     "jspdf": "^2.5.1",
-    "html2canvas": "^1.4.1"
+    "html2canvas": "^1.4.1",
+    "lucide-vue-next": "^0.344.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
+    "autoprefixer": "^10.4.18",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
     "vite": "^5.0.0"
   }
 }

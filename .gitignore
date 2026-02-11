@@ -1,0 +1,8 @@
+node_modules
+dist
+.vscode
+.DS_Store
+*.local
+legacy_index.html
+src_backup
+dist_backup
