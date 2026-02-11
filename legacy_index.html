@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Professional Invoice Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+
+    <div class="invoice-wrapper" id="invoice">
+
+        <header class="top-section">
+            <div class="logo-container">
+                <input type="file" id="logo-input" hidden accept="image/*" onchange="handleLogo(this)">
+                <div class="logo-box" onclick="document.getElementById('logo-input').click()"
+                    title="Click to upload logo">
+                    <img id="logo-preview" src="" style="display:none;" alt="User Logo">
+                    <span id="logo-placeholder" style="color: var(--text-light); font-size: 24px;">+</span>
+                </div>
+                <input type="text" class="company-title" id="comp-name" value="CodeClinics" placeholder="Your Company">
+            </div>
+
+            <div class="invoice-header">
+                <h1>Invoice</h1>
+                <div class="meta-row">
+                    <span class="meta-label">Invoice ID</span>
+                    <span class="meta-value"><input type="text" id="inv-id" value="INV-0001"></span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Date</span>
+                    <span class="meta-value"><input type="date" id="inv-date"></span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Due Date</span>
+                    <span class="meta-value"><input type="date" id="due-date"></span>
+                </div>
+            </div>
+        </header>
+
+        <section class="info-grid">
+            <div>
+                <label class="info-label">From</label>
+                <textarea id="from-info" rows="4">Abdullah Younas
+Pakistan
+abdullahyounas101197@gmail.com</textarea>
+            </div>
+            <div>
+                <label class="info-label">Bill To</label>
+                <textarea id="to-info" rows="4">Rana Rajan
+Tokyo, Japan
+client@email.com</textarea>
+            </div>
+        </section>
+
+        <div class="items-container">
+            <table id="items-table">
+                <thead>
+                    <tr>
+                        <th class="col-desc">Description</th>
+                        <th class="col-amt">Amount</th>
+                        <th class="col-mode">Payment Mode</th>
+                        <th class="col-date">Date</th>
+                        <th class="action-col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" placeholder="e.g. Website Design"></td>
+                        <td><input type="number" value="0" oninput="calculateTotals()"></td>
+                        <td>
+                            <select>
+                                <option>Bank Transfer</option>
+                                <option>Western Union</option>
+                                <option>Cash</option>
+                                <option>PayPal</option>
+                            </select>
+                        </td>
+                        <td><input type="date"></td>
+                        <td class="action-col"><button class="action-btn" onclick="removeRow(this)">✕</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn btn-secondary btn-add" onclick="addRow()">+ Add Line Item</button>
+        </div>
+
+        <footer class="bottom-section">
+            <div class="notes-area">
+                <label class="info-label">Notes & Payment Instructions</label>
+                <textarea id="notes" rows="4">Please include Invoice ID in the payment reference. Thank you.</textarea>
+            </div>
+
+            <div class="summary-box">
+                <div class="summary-row">
+                    <span>Currency</span>
+                    <select id="currency" onchange="calculateTotals()" style="width: auto; text-align: right;">
+                        <option>PKR</option>
+                        <option>USD</option>
+                        <option>EUR</option>
+                        <option>GBP</option>
+                    </select>
+                </div>
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span class="summary-value"><span class="curr-symbol">PKR</span> <span
+                            id="sub-display">0</span></span>
+                </div>
+                <div class="summary-row">
+                    <span>Total Project</span>
+                    <input type="number" id="proj-total" value="0" oninput="calculateTotals()"
+                        style="width: 80px; text-align: right; background: transparent; font-family: 'Roboto Mono'; font-weight: 500;">
+                </div>
+                <div class="summary-row total">
+                    <span>Balance Due</span>
+                    <span class="summary-value"><span class="curr-symbol">PKR</span> <span
+                            id="bal-display">0</span></span>
+                </div>
+                <div class="summary-row" style="margin-top: 10px;">
+                    <span>Status</span>
+                    <span id="status-tag" class="status-tag unpaid">Unpaid</span>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-primary" onclick="generatePDF()">Download Professional PDF</button>
+        <button class="btn btn-secondary" onclick="saveDraft()">Save for Later</button>
+    </div>
+
+    <script>
+        // Defaults
+        document.getElementById('inv-date').valueAsDate = new Date();
+        let due = new Date(); due.setDate(due.getDate() + 14);
+        document.getElementById('due-date').valueAsDate = due;
+
+        function handleLogo(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.getElementById('logo-preview');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    document.getElementById('logo-placeholder').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function calculateTotals() {
+            let totalPaid = 0;
+            document.querySelectorAll("#items-table tbody tr").forEach(row => {
+                totalPaid += parseFloat(row.cells[1].querySelector('input').value) || 0;
+            });
+
+            let projTotal = parseFloat(document.getElementById('proj-total').value) || 0;
+            let balance = projTotal - totalPaid;
+            let curr = document.getElementById('currency').value;
+
+            document.getElementById('sub-display').innerText = totalPaid.toLocaleString();
+            document.getElementById('bal-display').innerText = balance.toLocaleString();
+            document.querySelectorAll('.curr-symbol').forEach(el => el.innerText = curr);
+
+            const tag = document.getElementById('status-tag');
+            tag.className = 'status-tag';
+            if (totalPaid === 0) { tag.innerText = 'Unpaid'; tag.classList.add('unpaid'); }
+            else if (balance > 0) { tag.innerText = 'Partial'; tag.classList.add('partial'); }
+            else { tag.innerText = 'Paid'; tag.classList.add('paid'); }
+        }
+
+        function addRow() {
+            const row = document.querySelector("#items-table tbody").insertRow();
+            row.innerHTML = `
+                <td><input type="text" placeholder="Description"></td>
+                <td><input type="number" value="0" oninput="calculateTotals()"></td>
+                <td><select><option>Bank Transfer</option><option>Western Union</option><option>Cash</option><option>PayPal</option></select></td>
+                <td><input type="date"></td>
+                <td class="action-col"><button class="action-btn" onclick="removeRow(this)">✕</button></td>
+            `;
+            row.cells[3].querySelector('input').valueAsDate = new Date();
+        }
+
+        function removeRow(btn) { btn.closest('tr').remove(); calculateTotals(); }
+
+        async function generatePDF() {
+            const btn = document.querySelector('.btn-primary');
+            btn.innerText = 'Preparing...';
+
+            // Critical optimization for High-DPI
+            const element = document.getElementById('invoice');
+
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: 3, // 3x scaling for extreme sharpness
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff'
+                });
+
+                const { jsPDF } = globalThis.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgData = canvas.toDataURL('image/png');
+
+                const w = pdf.internal.pageSize.getWidth();
+                const h = (canvas.height * w) / canvas.width;
+
+                pdf.addImage(imgData, 'PNG', 0, 0, w, h);
+                pdf.save(`Invoice_${document.getElementById('inv-id').value}.pdf`);
+            } catch (err) {
+                console.error(err);
+                alert('PDF generation failed.');
+            } finally {
+                btn.innerText = 'Download Professional PDF';
+            }
+        }
+
+        function saveDraft() {
+            const data = {
+                comp: document.getElementById('comp-name').value,
+                from: document.getElementById('from-info').value,
+                to: document.getElementById('to-info').value,
+                notes: document.getElementById('notes').value,
+                curr: document.getElementById('currency').value,
+                proj: document.getElementById('proj-total').value
+            };
+            localStorage.setItem('inv_v3_draft', JSON.stringify(data));
+            alert('Draft saved!');
+        }
+
+        globalThis.onload = () => {
+            const saved = localStorage.getItem('inv_v3_draft');
+            if (saved) {
+                const d = JSON.parse(saved);
+                document.getElementById('comp-name').value = d.comp;
+                document.getElementById('from-info').value = d.from;
+                document.getElementById('to-info').value = d.to;
+                document.getElementById('notes').value = d.notes;
+                document.getElementById('currency').value = d.curr;
+                document.getElementById('proj-total').value = d.proj;
+                calculateTotals();
+            }
+        };
+    </script>
+</body>
+
+</html>
