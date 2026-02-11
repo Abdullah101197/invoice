@@ -3,300 +3,250 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Professional Invoice Generator - CodeClinics</title>
+    <title>Professional Invoice Generator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-    <!-- Scripts for PDF and capture -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 
 <body>
 
-    <div class="invoice-container">
-        <div class="glass-card" id="invoice">
+    <div class="invoice-wrapper" id="invoice">
 
-            <div class="header">
-                <div class="logo-section">
-                    <input type="file" id="logo-input" hidden accept="image/*" onchange="handleLogo(this)">
-                    <div class="logo-placeholder" role="button" aria-label="Upload Logo" tabindex="0"
-                        onclick="document.getElementById('logo-input').click()"
-                        onkeydown="if(event.key==='Enter')document.getElementById('logo-input').click()">
-                        <img id="logo-img" src="" alt="Company Logo" class="logo-img-preview">
-                        <span id="logo-plus">+</span>
-                    </div>
-                    <div class="company-info">
-                        <h1 contenteditable="true" aria-label="Company Name">CodeClinics</h1>
-                        <p contenteditable="true" aria-label="Company Slogan">Professional Software Development Services
-                        </p>
-                    </div>
+        <header class="top-section">
+            <div class="logo-container">
+                <input type="file" id="logo-input" hidden accept="image/*" onchange="handleLogo(this)">
+                <div class="logo-box" onclick="document.getElementById('logo-input').click()"
+                    title="Click to upload logo">
+                    <img id="logo-preview" src="" style="display:none;" alt="User Logo">
+                    <span id="logo-placeholder" style="color: var(--text-light); font-size: 24px;">+</span>
                 </div>
-
-                <div class="meta-info">
-                    <h2>Invoice</h2>
-                    <div class="meta-grid">
-                        <label for="inv-num" class="meta-label">Invoice #</label>
-                        <span class="meta-value"><input type="text" id="inv-num" value="INV-2024-001"></span>
-
-                        <label for="inv-date" class="meta-label">Date</label>
-                        <span class="meta-value"><input type="date" id="inv-date"></span>
-
-                        <label for="due-date" class="meta-label">Due Date</label>
-                        <span class="meta-value"><input type="date" id="due-date"></span>
-                    </div>
-                </div>
+                <input type="text" class="company-title" id="comp-name" value="CodeClinics" placeholder="Your Company">
             </div>
 
-            <div class="details-grid">
-                <div>
-                    <div class="section-label">From</div>
-                    <textarea rows="4" placeholder="Your Company Details">Abdullah Younas
+            <div class="invoice-header">
+                <h1>Invoice</h1>
+                <div class="meta-row">
+                    <span class="meta-label">Invoice ID</span>
+                    <span class="meta-value"><input type="text" id="inv-id" value="INV-0001"></span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Date</span>
+                    <span class="meta-value"><input type="date" id="inv-date"></span>
+                </div>
+                <div class="meta-row">
+                    <span class="meta-label">Due Date</span>
+                    <span class="meta-value"><input type="date" id="due-date"></span>
+                </div>
+            </div>
+        </header>
+
+        <section class="info-grid">
+            <div>
+                <label class="info-label">From</label>
+                <textarea id="from-info" rows="4">Abdullah Younas
 Pakistan
 abdullahyounas101197@gmail.com</textarea>
-                </div>
-
-                <div>
-                    <div class="section-label">Bill To</div>
-                    <textarea rows="4" placeholder="Client Details">Rana Rajan
-Tokyo, Japan</textarea>
-                </div>
             </div>
-
-            <div class="table-container">
-                <table id="items-table">
-                    <thead>
-                        <tr>
-                            <th class="col-desc">Description</th>
-                            <th class="col-amt">Amount</th>
-                            <th class="col-mode">Payment Mode</th>
-                            <th class="col-date">Date</th>
-                            <th class="action-col"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><input type="text" placeholder="e.g. Initial Deposit"></td>
-                            <td><input type="number" value="0" oninput="calculateTotals()"></td>
-                            <td>
-                                <select aria-label="Payment Mode">
-                                    <option>Bank Transfer</option>
-                                    <option>Western Union</option>
-                                    <option>Cash</option>
-                                    <option>PayPal</option>
-                                </select>
-                            </td>
-                            <td><input type="date"></td>
-                            <td class="action-col">
-                                <button class="action-btn" onclick="removeRow(this)">✕</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button class="btn btn-secondary" onclick="addRow()">+ Add Item</button>
+            <div>
+                <label class="info-label">Bill To</label>
+                <textarea id="to-info" rows="4">Rana Rajan
+Tokyo, Japan
+client@email.com</textarea>
             </div>
+        </section>
 
-            <div class="summary-wrapper">
-                <div class="summary-card">
-                    <div class="summary-row">
-                        <label for="currency">Currency</label>
-                        <select id="currency" onchange="calculateTotals()" class="currency-select">
-                            <option>PKR</option>
-                            <option>USD</option>
-                            <option>EUR</option>
-                            <option>GBP</option>
-                        </select>
-                    </div>
-                    <div class="summary-row">
-                        <label for="projectTotal">Project Total</label>
-                        <input type="number" id="projectTotal" value="0" oninput="calculateTotals()"
-                            class="total-input">
-                    </div>
-                    <div class="summary-row">
-                        <span>Total Paid</span>
-                        <span><span class="curr-label">PKR</span> <span id="paid-display">0</span></span>
-                    </div>
-                    <div class="summary-row total">
-                        <span>Balance Due</span>
-                        <span><span class="curr-label">PKR</span> <span id="balance-display">0</span></span>
-                    </div>
-                    <div class="summary-row" style="margin-top: 20px;">
-                        <span>Status</span>
-                        <span id="status-badge" class="status-badge status-unpaid">Unpaid</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-40">
-                <div class="section-label">Notes & Terms</div>
-                <textarea rows="4">Thank you for your business. Please make payments by the due date.</textarea>
-            </div>
+        <div class="items-container">
+            <table id="items-table">
+                <thead>
+                    <tr>
+                        <th class="col-desc">Description</th>
+                        <th class="col-amt">Amount</th>
+                        <th class="col-mode">Payment Mode</th>
+                        <th class="col-date">Date</th>
+                        <th class="action-col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" placeholder="e.g. Website Design"></td>
+                        <td><input type="number" value="0" oninput="calculateTotals()"></td>
+                        <td>
+                            <select>
+                                <option>Bank Transfer</option>
+                                <option>Western Union</option>
+                                <option>Cash</option>
+                                <option>PayPal</option>
+                            </select>
+                        </td>
+                        <td><input type="date"></td>
+                        <td class="action-col"><button class="action-btn" onclick="removeRow(this)">✕</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="btn btn-secondary btn-add" onclick="addRow()">+ Add Line Item</button>
         </div>
 
-        <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
-            <button class="btn btn-primary" onclick="generatePDF()">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="Path 12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                    </path>
-                </svg>
-                Download PDF
-            </button>
-            <button class="btn btn-secondary" onclick="saveToLocal()">
-                Save Draft
-            </button>
-        </div>
+        <footer class="bottom-section">
+            <div class="notes-area">
+                <label class="info-label">Notes & Payment Instructions</label>
+                <textarea id="notes" rows="4">Please include Invoice ID in the payment reference. Thank you.</textarea>
+            </div>
+
+            <div class="summary-box">
+                <div class="summary-row">
+                    <span>Currency</span>
+                    <select id="currency" onchange="calculateTotals()" style="width: auto; text-align: right;">
+                        <option>PKR</option>
+                        <option>USD</option>
+                        <option>EUR</option>
+                        <option>GBP</option>
+                    </select>
+                </div>
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span class="summary-value"><span class="curr-symbol">PKR</span> <span
+                            id="sub-display">0</span></span>
+                </div>
+                <div class="summary-row">
+                    <span>Total Project</span>
+                    <input type="number" id="proj-total" value="0" oninput="calculateTotals()"
+                        style="width: 80px; text-align: right; background: transparent; font-family: 'Roboto Mono'; font-weight: 500;">
+                </div>
+                <div class="summary-row total">
+                    <span>Balance Due</span>
+                    <span class="summary-value"><span class="curr-symbol">PKR</span> <span
+                            id="bal-display">0</span></span>
+                </div>
+                <div class="summary-row" style="margin-top: 10px;">
+                    <span>Status</span>
+                    <span id="status-tag" class="status-tag unpaid">Unpaid</span>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-primary" onclick="generatePDF()">Download Professional PDF</button>
+        <button class="btn btn-secondary" onclick="saveDraft()">Save for Later</button>
     </div>
 
     <script>
-        // Set default dates
+        // Defaults
         document.getElementById('inv-date').valueAsDate = new Date();
-        let dueDate = new Date();
-        dueDate.setDate(dueDate.getDate() + 14);
-        document.getElementById('due-date').valueAsDate = dueDate;
+        let due = new Date(); due.setDate(due.getDate() + 14);
+        document.getElementById('due-date').valueAsDate = due;
 
         function handleLogo(input) {
             const file = input.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function (e) {
-                    const img = document.getElementById('logo-img');
+                reader.onload = (e) => {
+                    const img = document.getElementById('logo-preview');
                     img.src = e.target.result;
                     img.style.display = 'block';
-                    document.getElementById('logo-plus').style.display = 'none';
-                }
+                    document.getElementById('logo-placeholder').style.display = 'none';
+                };
                 reader.readAsDataURL(file);
             }
         }
 
         function calculateTotals() {
-            let rows = document.querySelectorAll("#items-table tbody tr");
             let totalPaid = 0;
-
-            rows.forEach(row => {
-                let amount = parseFloat(row.cells[1].querySelector('input').value) || 0;
-                totalPaid += amount;
+            document.querySelectorAll("#items-table tbody tr").forEach(row => {
+                totalPaid += parseFloat(row.cells[1].querySelector('input').value) || 0;
             });
 
-            let projectTotal = parseFloat(document.getElementById("projectTotal").value) || 0;
-            let balance = projectTotal - totalPaid;
-            let currency = document.getElementById("currency").value;
+            let projTotal = parseFloat(document.getElementById('proj-total').value) || 0;
+            let balance = projTotal - totalPaid;
+            let curr = document.getElementById('currency').value;
 
-            document.getElementById("paid-display").innerText = totalPaid.toLocaleString();
-            document.getElementById("balance-display").innerText = balance.toLocaleString();
+            document.getElementById('sub-display').innerText = totalPaid.toLocaleString();
+            document.getElementById('bal-display').innerText = balance.toLocaleString();
+            document.querySelectorAll('.curr-symbol').forEach(el => el.innerText = curr);
 
-            document.querySelectorAll(".curr-label").forEach(el => el.innerText = currency);
-
-            let badge = document.getElementById("status-badge");
-            badge.className = "status-badge";
-
-            if (totalPaid === 0) {
-                badge.innerText = "Unpaid";
-                badge.classList.add("status-unpaid");
-            } else if (balance > 0) {
-                badge.innerText = "Partial";
-                badge.classList.add("status-partial");
-            } else {
-                badge.innerText = "Paid";
-                badge.classList.add("status-paid");
-            }
+            const tag = document.getElementById('status-tag');
+            tag.className = 'status-tag';
+            if (totalPaid === 0) { tag.innerText = 'Unpaid'; tag.classList.add('unpaid'); }
+            else if (balance > 0) { tag.innerText = 'Partial'; tag.classList.add('partial'); }
+            else { tag.innerText = 'Paid'; tag.classList.add('paid'); }
         }
 
         function addRow() {
-            let tbody = document.querySelector("#items-table tbody");
-            let row = tbody.insertRow();
+            const row = document.querySelector("#items-table tbody").insertRow();
             row.innerHTML = `
                 <td><input type="text" placeholder="Description"></td>
                 <td><input type="number" value="0" oninput="calculateTotals()"></td>
-                <td>
-                    <select>
-                        <option>Bank Transfer</option>
-                        <option>Western Union</option>
-                        <option>Cash</option>
-                        <option>PayPal</option>
-                    </select>
-                </td>
+                <td><select><option>Bank Transfer</option><option>Western Union</option><option>Cash</option><option>PayPal</option></select></td>
                 <td><input type="date"></td>
                 <td class="action-col"><button class="action-btn" onclick="removeRow(this)">✕</button></td>
             `;
-            // Set current date for new row
             row.cells[3].querySelector('input').valueAsDate = new Date();
         }
 
-        function removeRow(btn) {
-            btn.closest("tr").remove();
-            calculateTotals();
-        }
+        function removeRow(btn) { btn.closest('tr').remove(); calculateTotals(); }
 
         async function generatePDF() {
-            const { jsPDF } = globalThis.jspdf;
+            const btn = document.querySelector('.btn-primary');
+            btn.innerText = 'Preparing...';
+
+            // Critical optimization for High-DPI
             const element = document.getElementById('invoice');
-
-            // Temporary hide elements for clean capture
-            const itemsTable = document.getElementById('items-table');
-            const actionCols = itemsTable.querySelectorAll('.action-col');
-            const addBtn = itemsTable.parentElement.querySelector('.btn-secondary');
-
-            actionCols.forEach(col => col.style.visibility = 'hidden');
-            if (addBtn) addBtn.style.display = 'none';
 
             try {
                 const canvas = await html2canvas(element, {
-                    scale: 2,
+                    scale: 3, // 3x scaling for extreme sharpness
                     useCORS: true,
                     logging: false,
                     backgroundColor: '#ffffff'
                 });
 
-                const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = globalThis.jspdf;
                 const pdf = new jsPDF('p', 'mm', 'a4');
-                const imgProps = pdf.getImageProperties(imgData);
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+                const imgData = canvas.toDataURL('image/png');
 
-                pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                pdf.save(`Invoice_${document.getElementById('inv-num').value}.pdf`);
-            } catch (error) {
-                console.error('PDF generation failed', error);
-                alert('Could not generate PDF. Please check the console.');
+                const w = pdf.internal.pageSize.getWidth();
+                const h = (canvas.height * w) / canvas.width;
+
+                pdf.addImage(imgData, 'PNG', 0, 0, w, h);
+                pdf.save(`Invoice_${document.getElementById('inv-id').value}.pdf`);
+            } catch (err) {
+                console.error(err);
+                alert('PDF generation failed.');
             } finally {
-                // Restore elements
-                actionCols.forEach(col => col.style.visibility = 'visible');
-                if (addBtn) addBtn.style.display = 'inline-flex';
+                btn.innerText = 'Download Professional PDF';
             }
         }
 
-        function saveToLocal() {
+        function saveDraft() {
             const data = {
-                company: document.querySelector('.company-info h1').innerText,
-                slogan: document.querySelector('.company-info p').innerText,
-                invNum: document.getElementById('inv-num').value,
-                projectTotal: document.getElementById('projectTotal').value,
-                currency: document.getElementById('currency').value,
-                from: document.querySelector('.details-grid div:first-child textarea').value,
-                billTo: document.querySelector('.details-grid div:last-child textarea').value,
-                notes: document.querySelector('.mt-40 textarea').value
+                comp: document.getElementById('comp-name').value,
+                from: document.getElementById('from-info').value,
+                to: document.getElementById('to-info').value,
+                notes: document.getElementById('notes').value,
+                curr: document.getElementById('currency').value,
+                proj: document.getElementById('proj-total').value
             };
-            localStorage.setItem('invoice_draft_v2', JSON.stringify(data));
-            alert('Draft saved locally!');
+            localStorage.setItem('inv_v3_draft', JSON.stringify(data));
+            alert('Draft saved!');
         }
 
-        globalThis.onload = function () {
-            const saved = localStorage.getItem('invoice_draft_v2');
+        globalThis.onload = () => {
+            const saved = localStorage.getItem('inv_v3_draft');
             if (saved) {
-                const data = JSON.parse(saved);
-                document.querySelector('.company-info h1').innerText = data.company;
-                document.querySelector('.company-info p').innerText = data.slogan;
-                document.getElementById('inv-num').value = data.invNum;
-                document.getElementById('projectTotal').value = data.projectTotal;
-                document.getElementById('currency').value = data.currency;
-                document.querySelector('.details-grid div:first-child textarea').value = data.from;
-                document.querySelector('.details-grid div:last-child textarea').value = data.billTo;
-                document.querySelector('.mt-40 textarea').value = data.notes;
+                const d = JSON.parse(saved);
+                document.getElementById('comp-name').value = d.comp;
+                document.getElementById('from-info').value = d.from;
+                document.getElementById('to-info').value = d.to;
+                document.getElementById('notes').value = d.notes;
+                document.getElementById('currency').value = d.curr;
+                document.getElementById('proj-total').value = d.proj;
                 calculateTotals();
             }
         };
     </script>
-
 </body>
 
 </html>
